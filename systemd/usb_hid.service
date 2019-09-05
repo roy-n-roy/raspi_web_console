@@ -1,0 +1,10 @@
+[Unit]
+Description=Create USB HID devices on boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/hid.sh
+
+[Install]
+WantedBy=multi-user.target

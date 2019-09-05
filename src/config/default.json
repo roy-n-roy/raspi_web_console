@@ -1,0 +1,5 @@
+{
+	"http_port": 80,
+	"dev_keyboard": "/dev/hidg0",
+	"dev_mouse": "/dev/hidg1"
+}

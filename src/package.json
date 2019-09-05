@@ -1,0 +1,27 @@
+{
+  "name": "raspi_web_console",
+  "version": "0.0.1",
+  "description": "Use your Raspberry Pi to emulate a USB keyboard, mouse, and HDMI monitor for remote console via http.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "Raspberry",
+    "Pi",
+    "USB",
+    "HID",
+    "Keyboard",
+    "Mouse",
+    "HDMI",
+    "Moniter"
+  ],
+  "author": "Roy",
+  "license": "MIT",
+  "dependencies": {
+    "config": "^3.2.2",
+    "socket.io": "^2.2.0"
+  }
+}

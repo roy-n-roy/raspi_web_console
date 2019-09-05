@@ -1,0 +1,16 @@
+[Unit]
+Description=Raspi Web Console Server
+After=network.target usb_hid.service
+
+[Service]
+WorkingDirectory=/usr/local/raspi_web_console
+Type=simple
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=raspi-web-console-server
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>RasPi Remote Console</title>
+	<style type="text/css">
+		video {
+			width: 100%;
+			object-fit: scale-down;
+		}
+	</style>
+</head>
+<body>
+	<video autoplay muted>
+		<source src="/screan" type="video/mp4">
+	</video>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+	<script>
+		// イベントとコールバックの定義
+		var socket = io.connect("/");
+
+		// ソケット切断時
+		socket.on("disconnect", function(){
+			if (window.confirm("切断されました。再接続しますか?")){
+				socket = socket.connect();
+			};
+		});
+
+		// マウス・キーボード入力時
+		window.onload=function(){
+			// キーボード: keydown
+			window.addEventListener('keydown', function(event){
+				socket.emit('keydown', event.code);
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			});
+			// キーボード: keyup
+			window.addEventListener('keyup', function(event){
+				socket.emit('keyup', event.code);
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			});
+			// マウス: mousemove
+			window.addEventListener('mousemove', function(event){
+				socket.emit('mousemove', event.movementX, event.movementY);
+			});
+			// マウス: mousedown
+			window.addEventListener('mousedown', function(event){
+				socket.emit('mousedown', event.button);
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			});
+			// マウス: mouseup
+			window.addEventListener('mouseup', function(event){
+				socket.emit('mouseup', event.button);
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			});
+			// wheel
+			window.addEventListener('wheel', function(event){
+				socket.emit('wheel', event.deltaX, event.deltaY);
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			});
+			// contextmenu
+			window.addEventListener("contextmenu", function(event){
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
+		}
+	</script>
+</body>
+</html>
