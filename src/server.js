@@ -1,20 +1,26 @@
 var conf = require('config');
 var fs = require("fs");
 var server = require("http").createServer();
-var raspivid = require('child_process').spawn('raspivid', ['-hf', '-w', '1280', '-h', '1024', '-t', '999999999', '-fps', '20', '-b', '5000000', '-o', '-']);
+var vidstream = require('child_process').spawn('vidstream.sh');
 
 server.on("request", (request, response) => {
-	switch (request.url){
-		case '/':
-			//HTMLファイルをストリームで読み込む
-			var stream = fs.createReadStream("index.html");
-			response.writeHead(200, {"Content-Type":"text/html"});
-			stream.pipe(response);
-			break;
-		case '/screan':
-			response.writeHead(200, {"Content-Type":"video/mp4"});
-			raspivid.stdout.pipe(response);
-			break;
+	try{
+		switch (request.url){
+			case '/':
+				//HTMLファイルをストリームで読み込む
+				var stream = fs.createReadStream("index.html");
+				response.writeHead(200, {"Content-Type":"text/html"});
+				stream.pipe(response);
+				break;
+			case '/screan':
+				var stream = fs.createReadStream("live/stream.m3u8");
+				response.writeHead(200, {"Content-Type":"application/x-mpegURL"});
+				stream.pipe(response);
+				break;
+		}
+	}catch(e){
+		response.writeHead(404, {'Content-Type': 'text/plain'});
+		response.write('404 Not Found\n');
 	}
 });
 server.listen(conf.http_port);

@@ -11,11 +11,21 @@
 	</style>
 </head>
 <body>
-	<video autoplay muted>
-		<source src="/screan" type="video/mp4">
-	</video>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/hls.js/0.12.4/hls.min.js"></script>
+	<video id="video" autoplay muted></video>
 	<script>
+		// 画面再生
+		if(Hls.isSupported()) {
+			var video = document.getElementById('video');
+			var hls = new Hls();
+			hls.loadSource('/screan');
+			hls.attachMedia(video);
+			hls.on(Hls.Events.MANIFEST_PARSED,function() {
+				video.play();
+			});
+		}
+
 		// イベントとコールバックの定義
 		var socket = io.connect("/");
 
