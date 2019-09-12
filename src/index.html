@@ -43,13 +43,13 @@
 				socket.emit('keydown', event.code);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
-			});
+			}, false);
 			// キーボード: keyup
 			window.addEventListener('keyup', function(event){
 				socket.emit('keyup', event.code);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
-			});
+			}, false);
 			// マウス: mousemove
 			window.addEventListener('mousemove', function(event){
 				socket.emit('mousemove', event.movementX, event.movementY);
@@ -57,21 +57,17 @@
 			// マウス: mousedown
 			window.addEventListener('mousedown', function(event){
 				socket.emit('mousedown', event.button);
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
 			});
 			// マウス: mouseup
 			window.addEventListener('mouseup', function(event){
 				socket.emit('mouseup', event.button);
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
 			});
 			// wheel
 			window.addEventListener('wheel', function(event){
 				socket.emit('wheel', event.deltaX, event.deltaY);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
-			});
+			}, false);
 			// contextmenu
 			window.addEventListener("contextmenu", function(event){
 				// デフォルトイベントをキャンセル

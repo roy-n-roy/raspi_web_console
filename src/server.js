@@ -165,10 +165,10 @@ io.on("connection", (socket) => {
 				mouse_data[0] |= hid.btn_mask.leftButton;
 				break;
 			case 1:
-				mouse_data[0] |= hid.btn_mask.rightButton;
+				mouse_data[0] |= hid.btn_mask.middleButton;
 				break;
 			case 2:
-				mouse_data[0] |= hid.btn_mask.middleButton;
+				mouse_data[0] |= hid.btn_mask.rightButton;
 				break;
 		}
 		mouse_data[1] = 0x00;
@@ -186,10 +186,10 @@ io.on("connection", (socket) => {
 				mouse_data[0] &= ~hid.btn_mask.leftButton;
 				break;
 			case 1:
-				mouse_data[0] &= ~hid.btn_mask.rightButton;
+				mouse_data[0] &= ~hid.btn_mask.middleButton;
 				break;
 			case 2:
-				mouse_data[0] &= ~hid.btn_mask.middleButton;
+				mouse_data[0] &= ~hid.btn_mask.rightButton;
 				break;
 		}
 		mouse_data[1] = 0x00;
@@ -204,11 +204,22 @@ io.on("connection", (socket) => {
 	socket.on('wheel', (X, Y) => {
 		mouse_data[1] = 0x00;
 		mouse_data[2] = 0x00;
-		mouse_data[3] = Y;
+		mouse_data[3] = -Y;
 		fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 			if (err){
 				console.log("Error wheel: " + mouse_data + "\n" + err);
 			}
 		});
 	});
+});
+
+// 終了時処理
+process.on('exit', () => {
+	vidstream.kill('SIGTERM');
+	server.close();
+});
+
+// 割り込み(Ctrl+C)での終了時
+process.on('SIGINT', () => {
+	process.exit(0);
 });
