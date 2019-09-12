@@ -5,14 +5,14 @@ module.exports = {
 		middleButton:	0x04
 	},
 	key_mask : {
-		leftControl	:	0x80,
-		leftShift	:	0x40,
-		leftAlt		:	0x20,
-		leftGUI		:	0x10,
-		rightControl:	0x08,
-		rightShift	:	0x04,
-		rightAlt	:	0x02,
-		rightGUI	:	0x01
+		leftControl	:	0x01,
+		leftShift	:	0x02,
+		leftAlt		:	0x04,
+		leftGUI		:	0x08,
+		rightControl:	0x10,
+		rightShift	:	0x20,
+		rightAlt	:	0x40,
+		rightGUI	:	0x80
 	},
 	keymap : {
 		//					0x00,	// Reserved (no event indicated)
