@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize USB Composite settings
+Before=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/init_usb.sh
+
+[Install]
+WantedBy=multi-user.target
