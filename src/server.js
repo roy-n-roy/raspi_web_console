@@ -13,8 +13,23 @@ server.on("request", (request, response) => {
 				stream.pipe(response);
 				break;
 			case '/screan':
-				var stream = fs.createReadStream("live/stream.m3u8");
-				response.writeHead(200, {"Content-Type":"application/x-mpegURL"});
+				try{
+					var stream = fs.createReadStream("live/stream.m3u8");
+					response.writeHead(200, {"Content-Type":"text/javascript"});
+					stream.pipe(response);
+				}catch(e){
+					response.writeHead(200, {"Content-Type":"text/javascript"});
+					response.write("");
+				}
+				break;
+			case '/js/socket.io.slim.js':
+				var stream = fs.createReadStream("node_modules/socket.io-client/dist/socket.io.slim.js");
+				response.writeHead(200, {"Content-Type":"text/javascript"});
+				stream.pipe(response);
+				break;
+			case '/js/hls.min.js':
+				var stream = fs.createReadStream("node_modules/hls.js/dist/hls.min.js");
+				response.writeHead(200, {"Content-Type":"text/javascript"});
 				stream.pipe(response);
 				break;
 		}
