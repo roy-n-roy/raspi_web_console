@@ -1,9 +1,11 @@
 module.exports = {
+	/** mouse bottun bit mask */
 	btn_mask : { 
 		leftButton	:	0x01,
 		rightButton	:	0x02,
 		middleButton:	0x04
 	},
+	/** keyboard modifier keys bit mask */
 	key_mask : {
 		leftControl	:	0x01,
 		leftShift	:	0x02,
@@ -14,6 +16,7 @@ module.exports = {
 		rightAlt	:	0x40,
 		rightGUI	:	0x80
 	},
+	/** Web API keyboard event code to HID keyboaed code */
 	keymap : {
 		//					0x00,	// Reserved (no event indicated)
 		//					0x01,	// Keyboard ErrorRollOver

@@ -37,10 +37,31 @@ server.listen(conf.http_port);
 
 // Socketを取得
 var io = require("socket.io").listen(server);
-
 var hid = require('./hid.js');
+
+/** Keyboard Input Reportデータ: 8 Bytes */
+/* データ構造(6ロールオーバー)
+ * 0byte: hid.key_mask 参照
+ * 1byte: 0
+ * 2byte: 1st key
+ * 3byte: 2nd key
+ * 4byte: 3rd key
+ * 5byte: 4th key
+ * 6byte: 5th key
+ * 7byte: 6th key
+ */
 var keybd_data = new Uint8Array(8);
-var mouse_data = new Uint8Array(4);
+
+/** Mouse Input Reportデータ: 5Bytes */
+/* データ構造
+ * 0byte: hid.btn_mask 参照
+ * 1byte: 水平方向移動量(signed byte)
+ * 2byte: 垂直方向移動量(signed byte)
+ * 3byte: 垂直ホイール移動量(signed byte)
+ * 4byte: 水平ホイール移動量(signed byte)
+ */
+var mouse_data = new Uint8Array(5);
+
 var lastKey = "";
 
 // 接続した時に実行される
