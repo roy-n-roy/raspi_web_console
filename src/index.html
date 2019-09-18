@@ -25,7 +25,7 @@
 		});
 
 		// マウス・キーボード入力時
-		window.onload=() => {
+		window.onload = () => {
 			// キーボード: keydown
 			window.addEventListener('keydown', (event) => {
 				socket.emit('keydown', event.type, event.code);
@@ -34,7 +34,7 @@
 			}, false);
 			// キーボード: keyup
 			window.addEventListener('keyup', (event) => {
-				socket.emit('keyup', event.type,event.code);
+				socket.emit('keyup', event.type, event.code);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);

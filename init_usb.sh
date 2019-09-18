@@ -29,22 +29,22 @@ echo $HOST > functions/rndis.$N/host_addr
 echo $SELF > functions/rndis.$N/dev_addr
 ln -s functions/rndis.$N configs/c.1/
 
-# Keyboard (6 simultaneous Keys + Modifier -> 8 Bytes)
+# Keyboard (Modifier keys + 6 simultaneous Keys -> 8 Bytes)
 N="usb0"
 mkdir -p functions/hid.$N
 echo 1 > functions/hid.$N/protocol
 echo 1 > functions/hid.$N/subclass
 echo 8 > functions/hid.$N/report_length
-echo -ne \\x05\\x01\\x09\\x06\\xA1\\x01\\x05\\x07\\x19\\xE0\\x29\\xE7\\x15\\x00\\x25\\x01\\x75\\x01\\x95\\x08\\x81\\x02\\x05\\x0C\\x95\\x01\\x75\\x08\\x15\\x00\\x26\\xFF\\x00\\x19\\x00\\x29\\xFF\\x81\\x00\\x05\\x08\\x19\\x01\\x29\\x08\\x95\\x08\\x75\\x01\\x91\\x02\\x05\\x07\\x95\\x06\\x75\\x08\\x15\\x00\\x26\\xE7\\x00\\x19\\x00\\x29\\xE7\\x81\\x00\\xC0 > functions/hid.$N/report_desc
+echo "05010906A101050719E029E715002501750195088102050C95017508150026FF00190029FF8100050819012908950875019102050795067508150026E700190029E78100C0" | xxd -r -ps > functions/hid.$N/report_desc
 ln -s functions/hid.$N configs/c.1/
 
-# Mouse (8 Buttons, X, Y, Wheel -> 4 Bytes)
+# Mouse (5 Buttons, X, Y, Wheel, AC Pan -> 5*2 Bytes)
 N="usb1"
 mkdir -p functions/hid.$N
 echo 2 > functions/hid.$N/protocol
 echo 1 > functions/hid.$N/subclass
-echo 4 > functions/hid.$N/report_length
-echo -ne \\x05\\x01\\x09\\x02\\xA1\\x01\\x09\\x01\\xA1\\x00\\x05\\x09\\x19\\x01\\x29\\x03\\x15\\x00\\x25\\x01\\x95\\x03\\x75\\x01\\x81\\x02\\x95\\x01\\x75\\x05\\x81\\x01\\x05\\x01\\x09\\x30\\x09\\x31\\x09\\x38\\x15\\x81\\x25\\x7F\\x75\\x08\\x95\\x03\\x81\\x06\\xC0\\xC0 > functions/hid.$N/report_desc
+echo 10 > functions/hid.$N/report_length
+echo "05010902A1010901A100050919012905150025019505750181029501750B8101050109300931093816018026FF7F751095038106050C0A380216018026FF7F751095018106C0C0" | xxd -r -ps > functions/hid.$N/report_desc
 ln -s functions/hid.$N configs/c.1/
 
 ls /sys/class/udc > UDC

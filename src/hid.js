@@ -1,9 +1,11 @@
 module.exports = {
 	/** mouse bottun bit mask */
 	btn_mask : { 
-		leftButton	:	0x01,
-		rightButton	:	0x02,
-		middleButton:	0x04
+		leftButton		:	0x0001,
+		rightButton		:	0x0002,
+		middleButton	:	0x0004,
+		backButton		:	0x0008,
+		forwardButton	:	0x0010
 	},
 	/** keyboard modifier keys bit mask */
 	key_mask : {

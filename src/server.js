@@ -52,17 +52,18 @@ var hid = require('./hid.js');
  */
 var keybd_data = new Uint8Array(8);
 
-/** Mouse Input Reportデータ: 5Bytes */
+/** Mouse Input Reportデータ: 10 Bytes */
 /* データ構造
- * 0byte: hid.btn_mask 参照
- * 1byte: 水平方向移動量(signed byte)
- * 2byte: 垂直方向移動量(signed byte)
- * 3byte: 垂直ホイール移動量(signed byte)
- * 4byte: 水平ホイール移動量(signed byte)
+ * 0-1byte: hid.btn_mask 参照
+ * 2-3byte: 水平方向移動量(signed short)
+ * 4-5byte: 垂直方向移動量(signed short)
+ * 6-7byte: 垂直ホイール移動量(signed short)
+ * 8-9byte: 水平ホイール移動量(signed byte)
  */
-var mouse_data = new Uint8Array(5);
+var mouse_data = new Uint16Array(5);
 
 var lastKey = "";
+var lastX = 0, lastY = 0;
 
 // 接続した時に実行される
 io.on("connection", (socket) => {
@@ -175,6 +176,10 @@ var clickEvent = (eventType, button) => {
 				return hid.btn_mask.middleButton;
 			case 2:
 				return hid.btn_mask.rightButton;
+			case 3:
+				return hid.btn_mask.backButton;
+			case 4:
+				return hid.btn_mask.forwardButton;
 		}
 	})(button);
 
@@ -183,10 +188,10 @@ var clickEvent = (eventType, button) => {
 	}else{
 		mouse_data[0] &= ~buttonMask;
 	}
-	mouse_data[1] = 0x00;
-	mouse_data[2] = 0x00;
-	mouse_data[3] = 0x00;
-	mouse_data[4] = 0x00;
+	mouse_data[1] = 0x0000;
+	mouse_data[2] = 0x0000;
+	mouse_data[3] = 0x0000;
+	mouse_data[4] = 0x0000;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 		if (err){
 			console.log("Error " + eventType + ": " + mouse_data + "\n" + err);
@@ -198,8 +203,8 @@ var clickEvent = (eventType, button) => {
 var moveEvent = (X, Y) => {
 	mouse_data[1] = X;
 	mouse_data[2] = Y;
-	mouse_data[3] = 0x00;
-	mouse_data[4] = 0x00;
+	mouse_data[3] = 0x0000;
+	mouse_data[4] = 0x0000;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 		if (err){
 			console.log("Error move: " + mouse_data + "\n" + err);
@@ -209,10 +214,10 @@ var moveEvent = (X, Y) => {
 
 // ホイールイベント
 var wheelEvent = (X, Y) => {
-	mouse_data[1] = 0x00;
-	mouse_data[2] = 0x00;
+	mouse_data[1] = 0x0000;
+	mouse_data[2] = 0x0000;
 	mouse_data[3] = -Y;
-	mouse_data[4] = -X;
+	mouse_data[4] = X;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 		if (err){
 			console.log("Error wheel: " + mouse_data + "\n" + err);
