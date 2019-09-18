@@ -18,46 +18,62 @@
 		var socket = io.connect("/");
 
 		// ソケット切断時
-		socket.on("disconnect", function(){
+		socket.on("disconnect", () => {
 			if (window.confirm("切断されました。再接続しますか?")){
 				socket = socket.connect();
 			};
 		});
 
 		// マウス・キーボード入力時
-		window.onload=function(){
+		window.onload=() => {
 			// キーボード: keydown
-			window.addEventListener('keydown', function(event){
-				socket.emit('keydown', event.code);
+			window.addEventListener('keydown', (event) => {
+				socket.emit('keydown', event.type, event.code);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);
 			// キーボード: keyup
-			window.addEventListener('keyup', function(event){
-				socket.emit('keyup', event.code);
+			window.addEventListener('keyup', (event) => {
+				socket.emit('keyup', event.type,event.code);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);
 			// マウス: mousemove
-			window.addEventListener('mousemove', function(event){
+			window.addEventListener('mousemove', (event) => {
 				socket.emit('mousemove', event.movementX, event.movementY);
 			});
 			// マウス: mousedown
-			window.addEventListener('mousedown', function(event){
-				socket.emit('mousedown', event.button);
+			window.addEventListener('mousedown', (event) => {
+				socket.emit('mousedown', event.type, event.button);
 			});
 			// マウス: mouseup
-			window.addEventListener('mouseup', function(event){
-				socket.emit('mouseup', event.button);
+			window.addEventListener('mouseup', (event) => {
+				socket.emit('mouseup', event.type, event.button);
 			});
-			// wheel
-			window.addEventListener('wheel', function(event){
+			// マウス: contextmenu
+			window.addEventListener("contextmenu", (event) => {
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
+			// ホイール: wheel
+			window.addEventListener('wheel', (event) => {
 				socket.emit('wheel', event.deltaX, event.deltaY);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);
-			// contextmenu
-			window.addEventListener("contextmenu", function(event){
+			// タッチ: touchstart
+			window.addEventListener("touchstart", (event) => {
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
+			// タッチ: touchend
+			window.addEventListener("touchend", (event) => {
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
+			// タッチ: touchmove
+			window.addEventListener("touchmove", (event) => {
+				socket.emit(event.touches.length == 1 ? 'touchmove' : 'wheel', event.changedTouches[0].pageX, event.changedTouches[0].pageY);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);
