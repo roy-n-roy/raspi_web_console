@@ -45,14 +45,25 @@
 			// マウス: mousedown
 			window.addEventListener('mousedown', (event) => {
 				socket.emit('mousedown', event.type, event.button);
-			});
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
 			// マウス: mouseup
 			window.addEventListener('mouseup', (event) => {
 				socket.emit('mouseup', event.type, event.button);
-			});
+				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
 			// マウス: contextmenu
 			window.addEventListener("contextmenu", (event) => {
 				// デフォルトイベントをキャンセル
+				event.preventDefault();
+			}, false);
+			history.pushState(null, null, null);
+			// マウス: browserback
+			window.addEventListener("popstate", (event) =>{
+				// デフォルトイベントをキャンセル
+				history.pushState(null, null, null);
 				event.preventDefault();
 			}, false);
 			// ホイール: wheel
