@@ -27,11 +27,6 @@ server.on("request", (request, response) => {
 				response.writeHead(200, {"Content-Type":"text/javascript"});
 				stream.pipe(response);
 				break;
-			case '/js/hls.min.js':
-				var stream = fs.createReadStream("node_modules/hls.js/dist/hls.min.js");
-				response.writeHead(200, {"Content-Type":"text/javascript"});
-				stream.pipe(response);
-				break;
 		}
 	}catch(e){
 		response.writeHead(404, {'Content-Type': 'text/plain'});

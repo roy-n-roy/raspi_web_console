@@ -22,7 +22,6 @@
   "license": "MIT",
   "dependencies": {
     "config": "^3.2.2",
-    "socket.io": "^2.2.0",
-    "hls.js": "^0.12.4"
+    "socket.io": "^2.2.0"
   }
 }

@@ -12,20 +12,8 @@
 </head>
 <body>
 	<script src="/js/socket.io.slim.js"></script>
-	<script src="/js/hls.min.js"></script>
 	<video id="video" autoplay muted></video>
 	<script>
-		// 画面再生
-		if(Hls.isSupported()) {
-			var video = document.getElementById('video');
-			var hls = new Hls();
-			hls.loadSource('/screan');
-			hls.attachMedia(video);
-			hls.on(Hls.Events.MANIFEST_PARSED,function() {
-				video.play();
-			});
-		}
-
 		// イベントとコールバックの定義
 		var socket = io.connect("/");
 
