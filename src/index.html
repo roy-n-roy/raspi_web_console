@@ -73,7 +73,7 @@
 			}, false);
 			// タッチ: touchmove
 			window.addEventListener("touchmove", (event) => {
-				socket.emit(event.touches.length == 1 ? 'touchmove' : 'wheel', event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+				socket.emit(event.touches.length == 1 ? 'touchmove' : 'wheel', event.changedTouches[0].clientX, event.changedTouches[0].clientY);
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);

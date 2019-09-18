@@ -82,7 +82,16 @@ io.on("connection", (socket) => {
 	socket.on('mousedown', clickEvent);
 	socket.on('mouseup', clickEvent);
 	socket.on('wheel', wheelEvent);
-	socket.on('touchmove', moveEvent);
+	socket.on('touchmove', (X, Y) => {
+		if (lastX === 0 && lastY === 0) {
+			lastX = X;
+			lastY = Y;
+			return;
+		}
+		moveEvent(lastX - X, lastY - Y);
+		lastX = X;
+		lastY = Y;
+	});
 });
 
 // 終了時処理
