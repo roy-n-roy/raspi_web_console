@@ -14,6 +14,7 @@
 	<script src="/js/socket.io.slim.js"></script>
 	<video id="video" autoplay muted></video>
 	<script>
+		var lastX = 0, lastY = 0;
 		// イベントとコールバックの定義
 		var socket = io.connect("/");
 
@@ -74,6 +75,8 @@
 			}, false);
 			// タッチ: touchstart
 			window.addEventListener("touchstart", (event) => {
+				lastX = event.changedTouches[0].clientX,
+				lastY = event.changedTouches[0].clientY;
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);
@@ -84,7 +87,14 @@
 			}, false);
 			// タッチ: touchmove
 			window.addEventListener("touchmove", (event) => {
-				socket.emit(event.touches.length == 1 ? 'touchmove' : 'wheel', event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+				const X = event.changedTouches[0].clientX,
+					  Y = event.changedTouches[0].clientY;
+				if (event.touches.length == 1){
+					socket.emit('touchmove', X - lastX, Y - lastY);
+				}else{
+					socket.emit('wheel', Math.sign(X - lastX), Math.sign(Y - lastY));
+				}
+				lastX = X, lastY = Y;
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);

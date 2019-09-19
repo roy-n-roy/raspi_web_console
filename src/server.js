@@ -63,7 +63,6 @@ var keybd_data = new Uint8Array(8);
 var mouse_data = new Uint16Array(5);
 
 var lastKey = "";
-var lastX = 0, lastY = 0;
 
 // 接続した時に実行される
 io.on("connection", (socket) => {
@@ -76,22 +75,13 @@ io.on("connection", (socket) => {
 	}
 
 	// メッセージ受信時のイベント
-	socket.on('keydown', keybdEvent);
-	socket.on('keyup', keybdEvent);
-	socket.on('mousemove', moveEvent);
-	socket.on('mousedown', clickEvent);
-	socket.on('mouseup', clickEvent);
-	socket.on('wheel', wheelEvent);
-	socket.on('touchmove', (X, Y) => {
-		if (lastX === 0 && lastY === 0) {
-			lastX = X;
-			lastY = Y;
-			return;
-		}
-		moveEvent(lastX - X, lastY - Y);
-		lastX = X;
-		lastY = Y;
-	});
+	socket.on('keydown',	keybdEvent)
+		  .on('keyup',		keybdEvent)
+		  .on('mousemove',	moveEvent)
+		  .on('mousedown',	clickEvent)
+		  .on('mouseup',	clickEvent)
+		  .on('wheel',		wheelEvent)
+		  .on('touchmove',	moveEvent);
 });
 
 // 終了時処理
@@ -105,7 +95,7 @@ process.on('SIGINT', () => {
 	process.exit(0);
 });
 
-// キーボード入力イベント
+/** キーボード入力イベント */
 var keybdEvent = (eventType, code) => {
 	if(eventType === 'keydown'){
 		// 連続した同じ入力の場合はキー押下の状態から変化しないため、終了する。
@@ -175,7 +165,7 @@ var keybdEvent = (eventType, code) => {
 	});
 }
 
-// マウスクリックイベント
+/** マウスクリックイベント */
 var clickEvent = (eventType, button) => {
 	const buttonMask = ((_button) => {
 		switch (_button){
@@ -208,8 +198,9 @@ var clickEvent = (eventType, button) => {
 	});
 };
 
-// マウス移動イベント
+/** マウス移動イベント */
 var moveEvent = (X, Y) => {
+	console.log(X, Y);
 	mouse_data[1] = X;
 	mouse_data[2] = Y;
 	mouse_data[3] = 0x0000;
@@ -221,7 +212,7 @@ var moveEvent = (X, Y) => {
 	});
 };
 
-// ホイールイベント
+/** ホイールイベント */
 var wheelEvent = (X, Y) => {
 	mouse_data[1] = 0x0000;
 	mouse_data[2] = 0x0000;
