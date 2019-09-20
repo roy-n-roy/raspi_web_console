@@ -1,5 +1,7 @@
 {
 	"http_port": 80,
 	"dev_keyboard": "/dev/hidg0",
-	"dev_mouse": "/dev/hidg1"
+	"dev_mouse": "/dev/hidg1",
+	"websocket_port": 8080,
+	"dev_video": "/dev/video0"
 }

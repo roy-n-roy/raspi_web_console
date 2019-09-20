@@ -4,6 +4,10 @@
 	<meta charset="UTF-8">
 	<title>RasPi Remote Console</title>
 	<style type="text/css">
+		body {
+			margin: 2px;
+			padding: 0px;
+		}
 		video {
 			width: 100%;
 			object-fit: scale-down;
@@ -11,22 +15,25 @@
 	</style>
 </head>
 <body>
+	<video id="remote_video" autoplay mutedv style="border: 1px solid gray;"></video>
 	<script src="/js/socket.io.slim.js"></script>
-	<video id="video" autoplay muted></video>
+	<script src="/webrtc.js"></script>
 	<script>
 		var lastX = 0, lastY = 0;
 		// イベントとコールバックの定義
 		var socket = io.connect("/");
-
+		
 		// ソケット切断時
 		socket.on("disconnect", () => {
+			window.webrtc.disconnect();
 			if (window.confirm("切断されました。再接続しますか?")){
 				socket = socket.connect();
+				window.webrtc.connect();
 			};
 		});
 
-		// マウス・キーボード入力時
 		window.onload = () => {
+			// マウス・キーボード入力時
 			// キーボード: keydown
 			window.addEventListener('keydown', (event) => {
 				socket.emit('keydown', event.type, event.code);
@@ -98,7 +105,14 @@
 				// デフォルトイベントをキャンセル
 				event.preventDefault();
 			}, false);
-		}
+
+			// WebRTC接続
+			window.webrtc.connect();
+		};
+
+		window.onclose = () => {
+			window.webrtc.disconnect();
+		};
 	</script>
 </body>
 </html>

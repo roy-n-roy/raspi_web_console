@@ -1,7 +1,7 @@
-var conf = require('config');
-var fs = require("fs");
-var server = require("http").createServer();
-var vidstream = require('child_process').spawn('vidstream.sh');
+const conf = require('config');
+const fs = require("fs");
+const server = require("http").createServer();
+let momo_process;
 
 server.on("request", (request, response) => {
 	try{
@@ -12,18 +12,13 @@ server.on("request", (request, response) => {
 				response.writeHead(200, {"Content-Type":"text/html"});
 				stream.pipe(response);
 				break;
-			case '/screan':
-				try{
-					var stream = fs.createReadStream("live/stream.m3u8");
-					response.writeHead(200, {"Content-Type":"text/javascript"});
-					stream.pipe(response);
-				}catch(e){
-					response.writeHead(200, {"Content-Type":"text/javascript"});
-					response.write("");
-				}
-				break;
 			case '/js/socket.io.slim.js':
 				var stream = fs.createReadStream("node_modules/socket.io-client/dist/socket.io.slim.js");
+				response.writeHead(200, {"Content-Type":"text/javascript"});
+				stream.pipe(response);
+				break;
+			case '/webrtc.js':
+				var stream = fs.createReadStream("webrtc.js");
 				response.writeHead(200, {"Content-Type":"text/javascript"});
 				stream.pipe(response);
 				break;
@@ -38,6 +33,40 @@ server.listen(conf.http_port);
 // Socketを取得
 var io = require("socket.io").listen(server);
 var hid = require('./hid.js');
+
+// heartbieat設定
+io.set('heartbeat interval', 5000);
+io.set('heartbeat timeout', 15000);
+
+
+// 接続した時に実行される
+io.on("connection", (socket) => {
+
+	// 既存のコネクションを切断(排他接続)
+	for (id in io.sockets.connected){
+		if (id !== socket.id){
+			io.sockets.connected[id].disconnect();
+		}
+	}
+
+	socket.on('keydown',	keybdEvent)
+		  .on('keyup',		keybdEvent)
+		  .on('mousemove',	moveEvent)
+		  .on('mousedown',	clickEvent)
+		  .on('mouseup',	clickEvent)
+		  .on('wheel',		wheelEvent)
+		  .on('touchmove',	moveEvent);
+	
+	momo_process = require('child_process').spawn('momo', ['--no-audio', '--video-device', conf.dev_video, '--force-i420', '--resolution', 'FHD', '--fixed-resolution', '--port', conf.websocket_port, 'test']);
+
+	socket.on('disconnect', () =>{
+		momo_process.kill('SIGTERM');
+	});
+
+	momo_process.on('close', (code, signal) => {
+		console.error('momo process closed. exet code: ' + code);
+	});
+});
 
 /** Keyboard Input Reportデータ: 8 Bytes */
 /* データ構造(6ロールオーバー)
@@ -62,38 +91,8 @@ var keybd_data = new Uint8Array(8);
  */
 var mouse_data = new Uint16Array(5);
 
+/** 最後に入力したキー */
 var lastKey = "";
-
-// 接続した時に実行される
-io.on("connection", (socket) => {
-
-	// 既存のコネクションを切断(排他接続)
-	for (id in io.sockets.connected){
-		if (id !== socket.id){
-			io.sockets.connected[id].disconnect();
-		}
-	}
-
-	// メッセージ受信時のイベント
-	socket.on('keydown',	keybdEvent)
-		  .on('keyup',		keybdEvent)
-		  .on('mousemove',	moveEvent)
-		  .on('mousedown',	clickEvent)
-		  .on('mouseup',	clickEvent)
-		  .on('wheel',		wheelEvent)
-		  .on('touchmove',	moveEvent);
-});
-
-// 終了時処理
-process.on('exit', () => {
-	vidstream.kill('SIGTERM');
-	server.close();
-});
-
-// 割り込み(Ctrl+C)での終了時
-process.on('SIGINT', () => {
-	process.exit(0);
-});
 
 /** キーボード入力イベント */
 var keybdEvent = (eventType, code) => {
@@ -163,7 +162,7 @@ var keybdEvent = (eventType, code) => {
 			console.log("Error " + eventType + ": " + keybd_data + "\n" + err);
 		}
 	});
-}
+};
 
 /** マウスクリックイベント */
 var clickEvent = (eventType, button) => {
@@ -200,7 +199,6 @@ var clickEvent = (eventType, button) => {
 
 /** マウス移動イベント */
 var moveEvent = (X, Y) => {
-	console.log(X, Y);
 	mouse_data[1] = X;
 	mouse_data[2] = Y;
 	mouse_data[3] = 0x0000;
@@ -223,4 +221,15 @@ var wheelEvent = (X, Y) => {
 			console.log("Error wheel: " + mouse_data + "\n" + err);
 		}
 	});
-}
+};
+
+// 終了時処理
+process.on('exit', () => {
+	momo_process.kill('SIGTERM');
+	server.close();
+});
+
+// 割り込み(Ctrl+C)での終了時
+process.on('SIGINT', () => {
+	process.exit(0);
+});
