@@ -13,7 +13,7 @@ cd /usr/local/raspi_web_console
 npm install
 cd -
 
-cp systemd/system/usb_init.service systemd/system/raspi_web_console.service /etc/systemd/system/.
+cp systemd/system/usb_init.service systemd/system/web_console.service /etc/systemd/system/.
 systemctl daemon-reload
 systemctl enable usb_init
-systemctl enable raspi_web_console
+systemctl enable web_console
