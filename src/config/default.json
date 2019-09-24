@@ -3,5 +3,6 @@
 	"dev_keyboard": "/dev/hidg0",
 	"dev_mouse": "/dev/hidg1",
 	"websocket_port": 8080,
-	"dev_video": "/dev/video0"
+	"dev_video": "/dev/video0",
+	"signaling_url": "ws://localhost:3000"
 }

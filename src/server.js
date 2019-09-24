@@ -4,7 +4,7 @@ const conf = require('config');
 const hid = require('./hid.js');
 
 const server = require("http").createServer();
-const proxy = require('http-proxy').createProxyServer({target: 'ws://localhost:3000', ws: true});
+const proxy = require('http-proxy').createProxyServer({target: conf.signaling_url, ws: true});
 const io = require('socket.io')(server);
 
 // httpサーバで返却する静的コンテンツ
