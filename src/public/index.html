@@ -45,10 +45,8 @@
 		socket.on('reconnect_attempt', () => socket.io.opts.transports = ['polling', 'websocket']);
 		// ソケット切断時
 		socket.on("disconnect", () => {
-			window.webrtc.disconnect();
 			if (window.confirm("切断されました。再接続しますか?")){
 				socket = socket.connect();
-				window.webrtc.connect();
 			};
 		});
 

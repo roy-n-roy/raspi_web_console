@@ -1,34 +1,22 @@
-const fs = require("fs");
-const path = require('path');
 const conf = require('config');
-const hid = require('./hid.js');
+const fs = require("fs");
 
-const server = require("http").createServer();
+const express = require('express');
+const app = express();
+const server = require("http").Server(app);
 const proxy = require('http-proxy').createProxyServer({target: conf.signaling_url, ws: true});
 const io = require('socket.io')(server);
 
-// httpサーバで返却する静的コンテンツ
-const contents = {
-	'/': 'index.html',
-	'/index.html': 'index.html',
-	'/js/ayame.min.js': 'node_modules/@open-ayame/ayame-web-sdk/dist/ayame.min.js',
-	'/js/socket.io.slim.js': 'node_modules/socket.io-client/dist/socket.io.slim.js' };
-const mime = {
-	'.html': 'text/html',
-	'.css': 'test/css',
-	'.js': 'text/javascript' };
+const hid = require(__dirname + '/hid.js');
 
-// http Request
-server.on("request", (request, response) => {
-	if (contents[request.url]){
-		response.writeHead(200, {"Content-Type": mime[path.extname(contents[request.url])]});
-		fs.createReadStream(contents[request.url]).pipe(response);
-	}
-});
+app.use('/', express.static(__dirname + '/public'));
+app.use('/js', express.static(__dirname + '/node_modules/socket.io-client/dist/'));
+app.use('/js', express.static(__dirname + '/node_modules/@open-ayame/ayame-web-sdk/dist/'));
+
 // http -> websocket Upgrade
-server.on('upgrade', (request, socket, head) =>{
-	if (request.url === '/signaling'){
-		proxy.ws(request, socket, head);
+server.on('upgrade', (req, socket, head) =>{
+	if (req.url === '/signaling'){
+		proxy.ws(req, socket, head);
 	}
 });
 server.listen(conf.http_port);

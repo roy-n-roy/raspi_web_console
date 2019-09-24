@@ -21,9 +21,10 @@
   "author": "Roy",
   "license": "MIT",
   "dependencies": {
-    "@open-ayame/ayame-web-sdk": "^19.8.0",
     "config": "^3.2.2",
-    "socket.io": "^2.3.0",
-    "http-proxy": "^1.18.0"
+    "express": "^4.17.1",
+    "http-proxy": "^1.18.0",
+    "@open-ayame/ayame-web-sdk": "^19.8.0",
+    "socket.io": "^2.3.0"
   }
 }
