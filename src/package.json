@@ -21,8 +21,8 @@
   "author": "Roy",
   "license": "MIT",
   "dependencies": {
+    "@open-ayame/ayame-web-sdk": "^19.8.0",
     "config": "^3.2.2",
     "socket.io": "^2.2.0",
-    "wrtc": "^0.4.2"
   }
 }
