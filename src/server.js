@@ -2,30 +2,26 @@ const conf = require('config');
 const fs = require("fs");
 const server = require("http").createServer();
 let momo_process;
+const path = require('path');
 
+// httpサーバで返却する静的コンテンツ
+const contents = {
+	'/': 'index.html',
+	'/index.html': 'index.html',
+	'/js/ayame.min.js': 'node_modules/@open-ayame/ayame-web-sdk/dist/ayame.min.js',
+	'/js/socket.io.slim.js': 'node_modules/socket.io-client/dist/socket.io.slim.js' };
+const mime = {
+	'.html': 'text/html',
+	'.css': 'test/css',
+	'.js': 'text/javascript' };
+
+// http Request
 server.on("request", (request, response) => {
-	try{
-		switch (request.url){
-			case '/':
-				//HTMLファイルをストリームで読み込む
-				var stream = fs.createReadStream("index.html");
-				response.writeHead(200, {"Content-Type":"text/html"});
-				stream.pipe(response);
-				break;
-			case '/js/socket.io.slim.js':
-				var stream = fs.createReadStream("node_modules/socket.io-client/dist/socket.io.slim.js");
-				response.writeHead(200, {"Content-Type":"text/javascript"});
-				stream.pipe(response);
-				break;
-			case '/webrtc.js':
-				var stream = fs.createReadStream("webrtc.js");
-				response.writeHead(200, {"Content-Type":"text/javascript"});
-				stream.pipe(response);
-				break;
-		}
-	}catch(e){
-		response.writeHead(404, {'Content-Type': 'text/plain'});
-		response.write('404 Not Found\n');
+	if (contents[request.url]){
+		response.writeHead(200, {"Content-Type": mime[path.extname(contents[request.url])]});
+		fs.createReadStream(contents[request.url]).pipe(response);
+	}
+});
 	}
 });
 server.listen(conf.http_port);
