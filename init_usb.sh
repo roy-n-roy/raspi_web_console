@@ -17,17 +17,17 @@ mkdir -p configs/c.1/strings/0x409
 echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
 echo 1000 > configs/c.1/MaxPower
 
-# Ethernet Adapter
-N="usb0"
-mkdir -p functions/rndis.$N/os_desc/interface.rndis
-# first byte of address must be even
-HOST="48:6f:73:74:50:43" # "HostPC"
-SELF="42:61:64:55:53:42" # "BadUSB"
-echo RNDIS > functions/rndis.$N/os_desc/interface.rndis/compatible_id
-echo 5162001 > functions/rndis.$N/os_desc/interface.rndis/sub_compatible_id
-echo $HOST > functions/rndis.$N/host_addr
-echo $SELF > functions/rndis.$N/dev_addr
-ln -s functions/rndis.$N configs/c.1/
+## Ethernet Adapter for Debug.
+#N="usb0"
+#mkdir -p functions/rndis.$N/os_desc/interface.rndis
+## first byte of address must be even
+#HOST="48:6f:73:74:50:43" # "HostPC"
+#SELF="42:61:64:55:53:42" # "BadUSB"
+#echo RNDIS > functions/rndis.$N/os_desc/interface.rndis/compatible_id
+#echo 5162001 > functions/rndis.$N/os_desc/interface.rndis/sub_compatible_id
+#echo $HOST > functions/rndis.$N/host_addr
+#echo $SELF > functions/rndis.$N/dev_addr
+#ln -s functions/rndis.$N configs/c.1/
 
 # Keyboard (Modifier keys + 6 simultaneous Keys -> 8 Bytes)
 N="usb0"
