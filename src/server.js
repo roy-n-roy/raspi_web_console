@@ -1,8 +1,11 @@
-const conf = require('config');
 const fs = require("fs");
-const server = require("http").createServer();
-let momo_process;
 const path = require('path');
+const conf = require('config');
+const hid = require('./hid.js');
+
+const server = require("http").createServer();
+const proxy = require('http-proxy').createProxyServer({target: 'ws://localhost:3000', ws: true});
+const io = require('socket.io')(server);
 
 // httpサーバで返却する静的コンテンツ
 const contents = {
@@ -22,22 +25,16 @@ server.on("request", (request, response) => {
 		fs.createReadStream(contents[request.url]).pipe(response);
 	}
 });
+// http -> websocket Upgrade
+server.on('upgrade', (request, socket, head) =>{
+	if (request.url === '/signaling'){
+		proxy.ws(request, socket, head);
 	}
 });
 server.listen(conf.http_port);
 
-// Socketを取得
-var io = require("socket.io").listen(server);
-var hid = require('./hid.js');
-
-// heartbieat設定
-io.set('heartbeat interval', 5000);
-io.set('heartbeat timeout', 15000);
-
-
-// 接続した時に実行される
+// 接続時に実行
 io.on("connection", (socket) => {
-
 	// 既存のコネクションを切断(排他接続)
 	for (id in io.sockets.connected){
 		if (id !== socket.id){
@@ -45,23 +42,14 @@ io.on("connection", (socket) => {
 		}
 	}
 
+	// 入力イベント
 	socket.on('keydown',	keybdEvent)
-		  .on('keyup',		keybdEvent)
-		  .on('mousemove',	moveEvent)
-		  .on('mousedown',	clickEvent)
-		  .on('mouseup',	clickEvent)
-		  .on('wheel',		wheelEvent)
-		  .on('touchmove',	moveEvent);
-	
-	momo_process = require('child_process').spawn('momo', ['--no-audio', '--video-device', conf.dev_video, '--force-i420', '--resolution', 'FHD', '--fixed-resolution', '--port', conf.websocket_port, 'test']);
-
-	socket.on('disconnect', () =>{
-		momo_process.kill('SIGTERM');
-	});
-
-	momo_process.on('close', (code, signal) => {
-		console.error('momo process closed. exet code: ' + code);
-	});
+		.on('keyup',		keybdEvent)
+		.on('mousemove',	moveEvent)
+		.on('mousedown',	clickEvent)
+		.on('mouseup',		clickEvent)
+		.on('wheel',		wheelEvent)
+		.on('touchmove',	moveEvent);
 });
 
 /** Keyboard Input Reportデータ: 8 Bytes */
@@ -221,7 +209,6 @@ var wheelEvent = (X, Y) => {
 
 // 終了時処理
 process.on('exit', () => {
-	momo_process.kill('SIGTERM');
 	server.close();
 });
 
