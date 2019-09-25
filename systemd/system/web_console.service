@@ -5,7 +5,7 @@ After=network.target usb_hid.service
 [Service]
 WorkingDirectory=/usr/local/raspi_web_console
 Type=simple
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node index.js
 Restart=always
 RestartSec=10
 StandardOutput=syslog

@@ -1,19 +1,20 @@
 const conf = require('config');
-const fs = require("fs");
-
+const fs = require('fs');
 const express = require('express');
 const app = express();
-const server = require("http").Server(app);
+const server = require('http').Server(app);
 const proxy = require('http-proxy').createProxyServer({target: conf.signaling_url, ws: true});
 const io = require('socket.io')(server);
 
+// HIDモジュールを読み込み
 const hid = require(__dirname + '/hid.js');
 
+// コンテンツ公開
 app.use('/', express.static(__dirname + '/public'));
-app.use('/js', express.static(__dirname + '/node_modules/socket.io-client/dist/'));
-app.use('/js', express.static(__dirname + '/node_modules/@open-ayame/ayame-web-sdk/dist/'));
+app.use('/js', express.static(__dirname + '/node_modules/socket.io-client/dist'));
+app.use('/js', express.static(__dirname + '/node_modules/@open-ayame/ayame-web-sdk/dist'));
 
-// http -> websocket Upgrade
+// シグナリングサーバへの接続をProxy
 server.on('upgrade', (req, socket, head) =>{
 	if (req.url === '/signaling'){
 		proxy.ws(req, socket, head);
@@ -22,7 +23,7 @@ server.on('upgrade', (req, socket, head) =>{
 server.listen(conf.http_port);
 
 // 接続時に実行
-io.on("connection", (socket) => {
+io.on('connection', (socket) => {
 	// 既存のコネクションを切断(排他接続)
 	for (id in io.sockets.connected){
 		if (id !== socket.id){
@@ -49,9 +50,8 @@ io.on("connection", (socket) => {
  * 4byte: 3rd key
  * 5byte: 4th key
  * 6byte: 5th key
- * 7byte: 6th key
- */
-var keybd_data = new Uint8Array(8);
+ * 7byte: 6th key */
+const keybd_data = new Uint8Array(8);
 
 /** Mouse Input Reportデータ: 10 Bytes */
 /* データ構造
@@ -59,25 +59,24 @@ var keybd_data = new Uint8Array(8);
  * 2-3byte: 水平方向移動量(signed short)
  * 4-5byte: 垂直方向移動量(signed short)
  * 6-7byte: 垂直ホイール移動量(signed short)
- * 8-9byte: 水平ホイール移動量(signed byte)
- */
-var mouse_data = new Uint16Array(5);
+ * 8-9byte: 水平ホイール移動量(signed byte) */
+const mouse_data = new Uint16Array(5);
 
-/** 最後に入力したキー */
-var lastKey = "";
+const digitizer_data = new Uint16Array(2);
+
+/** 最後に入力したキー 記憶用変数 */
+let lastKey = '';
 
 /** キーボード入力イベント */
-var keybdEvent = (eventType, code) => {
+const keybdEvent = (eventType, code) => {
 	if(eventType === 'keydown'){
 		// 連続した同じ入力の場合はキー押下の状態から変化しないため、終了する。
-		if (lastKey === code){
-			return;
-		}
+		if (lastKey === code) return;
+		// 最後に押下したキーを記憶
 		lastKey = code;
 	}else{
-		if (lastKey === code){
-			lastKey = "";
-		}
+		// キーを放した場合はクリアする
+		if (lastKey === code) lastKey = '';
 	}
 
 	// 「修飾キーか」と「修飾キーのマスク」を取得
@@ -115,12 +114,15 @@ var keybdEvent = (eventType, code) => {
 		}
 	// 通常キーの場合
 	}else{
-		let keyCode = hid.keymap[code],
-			idx = keybd_data.indexOf(keyCode, 2);
+		let keyCode = hid.keymap[code];
+		let idx = keybd_data.indexOf(keyCode, 2);
 		if(eventType === 'keydown' && idx < 0){
+			// 最大入力キー数=6 より少ない場合
 			if ((idx = keybd_data.indexOf(0x00, 2)) >= 0){
 				keybd_data[idx] = keyCode;
+			// 入力キー数>=6の場合
 			}else{
+				// 古い入力から切り捨てる
 				keybd_data.copyWithin(2, 3);
 				keybd_data[keybd_data.length - 1] = keyCode;
 			}
@@ -131,13 +133,13 @@ var keybdEvent = (eventType, code) => {
 	}
 	fs.writeFile(conf.dev_keyboard, keybd_data, (err) => {
 		if (err){
-			console.log("Error " + eventType + ": " + keybd_data + "\n" + err);
+			console.error(`Error ${eventType}: ${keybd_data}\n${err}`);
 		}
 	});
 };
 
 /** マウスクリックイベント */
-var clickEvent = (eventType, button) => {
+const clickEvent = (eventType, button) => {
 	const buttonMask = ((_button) => {
 		switch (_button){
 			case 0:
@@ -158,49 +160,47 @@ var clickEvent = (eventType, button) => {
 	}else{
 		mouse_data[0] &= ~buttonMask;
 	}
-	mouse_data[1] = 0x0000;
-	mouse_data[2] = 0x0000;
-	mouse_data[3] = 0x0000;
-	mouse_data[4] = 0x0000;
+	mouse_data[1] = mouse_data[2] = mouse_data[3] = mouse_data[4] = 0x0000;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 		if (err){
-			console.log("Error " + eventType + ": " + mouse_data + "\n" + err);
+			console.error(`Error ${eventType}: ${mouse_data}\n ${err}`);
 		}
 	});
 };
 
+/** マウス座標指定イベント */
+const pointEvent = (X, Y) => {
+	digitizer_data[0] = X;
+	digitizer_data[1] = Y;
+	fs.writeFile(conf.dev_digitizer, digitizer_data, (err) => {
+		if (err){
+			console.error(`Error point: ${digitizer_data}\n ${err}`);
+		}
+	});
+	moveEvent(1, 0);
+}
+
 /** マウス移動イベント */
-var moveEvent = (X, Y) => {
+const moveEvent = (X, Y) => {
 	mouse_data[1] = X;
 	mouse_data[2] = Y;
-	mouse_data[3] = 0x0000;
-	mouse_data[4] = 0x0000;
+	mouse_data[3] = mouse_data[4] = 0x0000;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 		if (err){
-			console.log("Error move: " + mouse_data + "\n" + err);
+			console.error(`Error move: ${mouse_data}\n ${err}`);
 		}
 	});
 };
 
 /** ホイールイベント */
-var wheelEvent = (X, Y) => {
+const wheelEvent = (X, Y) => {
 	mouse_data[1] = 0x0000;
 	mouse_data[2] = 0x0000;
 	mouse_data[3] = -Y;
 	mouse_data[4] = X;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
 		if (err){
-			console.log("Error wheel: " + mouse_data + "\n" + err);
+			console.error(`Error wheel: ${mouse_data}\n ${err}`);
 		}
 	});
 };
-
-// 終了時処理
-process.on('exit', () => {
-	server.close();
-});
-
-// 割り込み(Ctrl+C)での終了時
-process.on('SIGINT', () => {
-	process.exit(0);
-});
