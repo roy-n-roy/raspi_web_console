@@ -8,21 +8,28 @@
 			margin: 2px;
 			padding: 0px;
 		}
-		video {
+		.video {
+			text-align: center;
+			top: -50%;
+			left: -50%;
 			width: 100%;
+			height: 100%;
+		}
+		#remote_video {
 			object-fit: scale-down;
 		}
 	</style>
 </head>
 <body>
-	<video id="remote_video" autoplay mutedv style="border: 1px solid gray;"></video>
+	<div class="video"><video id="remote_video" autoplay muted></video></div>
 	<script src="/js/ayame.min.js"></script>
 	<script src="/js/socket.io.slim.js"></script>
 	<script>
 		let lastX = 0, lastY = 0;
 
-		const signalingUrl = 'ws://raspberrypi.local/signaling';
-		let roomId = 'web_console';
+		const signalingUrl = 'ws://' + location.hostname + '/signaling';
+		const roomId = 'web_console';
+		const video = document.querySelector('#remote_video');
 
 		const options = Ayame.defaultOptions;
 		options.video.direction = 'recvonly';
@@ -33,13 +40,12 @@
 			await conn.connect(null);
 			conn.on('disconnect', (e) => console.log(e));
 			conn.on('addstream', (e) => {
-				document.querySelector('#remote_video').srcObject = e.stream;
+				video.srcObject = e.stream;
 			});
 			conn.on('removestream', (e) => {
-				document.querySelector('#remote_video').srcObject = null;
+				video.srcObject = null;
 			});
 		};
-		startConn();
 
 		const socket = io({transports: ['websocket']});
 		socket.on('reconnect_attempt', () => socket.io.opts.transports = ['polling', 'websocket']);
@@ -51,67 +57,49 @@
 		});
 
 		window.onload = () => {
-			// マウス・キーボード入力時
+			startConn();
+
+			// キーボード・マウス入力イベント
 			// キーボード: keydown
 			window.addEventListener('keydown', (event) => {
-				socket.emit('keydown', event.type, event.code);
-				// デフォルトイベントをキャンセル
 				event.preventDefault();
-			}, false);
+				socket.emit('keydown', event.type, event.code);
+			});
 			// キーボード: keyup
 			window.addEventListener('keyup', (event) => {
-				socket.emit('keyup', event.type, event.code);
-				// デフォルトイベントをキャンセル
 				event.preventDefault();
-			}, false);
+				socket.emit('keyup', event.type, event.code)
+			}, true);
 			// マウス: mousemove
-			window.addEventListener('mousemove', (event) => {
-				socket.emit('mousemove', event.movementX, event.movementY);
-			});
+			video.addEventListener('mousemove', (event) => socket.emit('mousemove', event.movementX , event.movementY));
 			// マウス: mousedown
-			window.addEventListener('mousedown', (event) => {
-				socket.emit('mousedown', event.type, event.button);
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
-			}, false);
+			window.addEventListener('mousedown', (event) => socket.emit('mousedown', event.type, event.button));
 			// マウス: mouseup
-			window.addEventListener('mouseup', (event) => {
-				socket.emit('mouseup', event.type, event.button);
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
-			}, false);
+			window.addEventListener('mouseup', (event) => socket.emit('mouseup', event.type, event.button));
 			// マウス: contextmenu
-			window.addEventListener("contextmenu", (event) => {
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
-			}, false);
-			history.pushState(null, null, null);
+			window.addEventListener("contextmenu", (event) => event.preventDefault(), true);
 			// マウス: browserback
-			window.addEventListener("popstate", (event) =>{
-				// デフォルトイベントをキャンセル
-				history.pushState(null, null, null);
-				event.preventDefault();
-			}, false);
+			history.pushState(null, null, null);
+			window.addEventListener("popstate", (event) => history.pushState(null, null, null));
 			// ホイール: wheel
 			window.addEventListener('wheel', (event) => {
-				socket.emit('wheel', event.deltaX, event.deltaY);
-				// デフォルトイベントをキャンセル
 				event.preventDefault();
-			}, false);
+				socket.emit('wheel', event.deltaX, event.deltaY);
+			}, true);
+
+			// タッチデバイスイベント
 			// タッチ: touchstart
 			window.addEventListener("touchstart", (event) => {
+				event.preventDefault();
 				lastX = event.changedTouches[0].clientX,
 				lastY = event.changedTouches[0].clientY;
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
-			}, false);
+			}, true);
 			// タッチ: touchend
-			window.addEventListener("touchend", (event) => {
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
-			}, false);
+			window.addEventListener("touchend", (event) => event.preventDefault(), true);
+
 			// タッチ: touchmove
 			window.addEventListener("touchmove", (event) => {
+				event.preventDefault();
 				const X = event.changedTouches[0].clientX,
 					  Y = event.changedTouches[0].clientY;
 				if (event.touches.length == 1){
@@ -120,9 +108,21 @@
 					socket.emit('wheel', Math.sign(X - lastX), Math.sign(Y - lastY));
 				}
 				lastX = X, lastY = Y;
-				// デフォルトイベントをキャンセル
-				event.preventDefault();
-			}, false);
+			}, true);
+
+			// 動画表示サイズの設定
+			const remote = document.querySelector('#remote_video');
+			if (remote.videoHeight * window.innerWidth > remote.videoWidth * window.innerHeight ) {
+				remote.videoHeight = window.innerHeight;
+			}
+			// 画面サイズ変更イベント
+			window.addEventListener('resize', (event) => {
+				socket.emit('windowresize', window.innerHeight, window.innerWidth);
+				if (remote.videoHeight * window.innerWidth > remote.videoWidth * window.innerHeight) {
+					console.log(`resize! ${remote.videoWidth} => ${remote.videoWidth * window.innerHeight / remote.videoHeight}`);
+					remote.videoWidth = remote.videoWidth * window.innerHeight / remote.videoHeight;
+				}
+			});
 		};
 	</script>
 </body>
