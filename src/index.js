@@ -13,6 +13,7 @@ const hid = require(__dirname + '/hid.js');
 app.use('/', express.static(__dirname + '/public'));
 app.use('/js', express.static(__dirname + '/node_modules/socket.io-client/dist'));
 app.use('/js', express.static(__dirname + '/node_modules/@open-ayame/ayame-web-sdk/dist'));
+app.use('/auth/webhook', require(__dirname + '/auth/webhook'));
 
 // シグナリングサーバへの接続をProxy
 server.on('upgrade', (req, socket, head) =>{
