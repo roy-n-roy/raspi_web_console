@@ -31,6 +31,7 @@
 		const roomId = 'web_console';
 		const video = document.querySelector('#remote_video');
 
+		// シグナリングサーバ(Ayame)に接続
 		const options = Ayame.defaultOptions;
 		options.video.direction = 'recvonly';
 		options.video.codec = 'VP9';
@@ -38,11 +39,11 @@
 		const conn = Ayame.connection(signalingUrl, roomId, options);
 		const startConn = async () => {
 			await conn.connect(null);
-			conn.on('disconnect', (e) => console.log(e));
-			conn.on('addstream', (e) => {
-				video.srcObject = e.stream;
+			conn.on('disconnect', (event) => console.log(event));
+			conn.on('addstream', (event) => {
+				video.srcObject = event.stream;
 			});
-			conn.on('removestream', (e) => {
+			conn.on('removestream', (event) => {
 				video.srcObject = null;
 			});
 		};
@@ -70,8 +71,9 @@
 				event.preventDefault();
 				socket.emit('keyup', event.type, event.code)
 			}, true);
-			// マウス: mousemove
+			// マウス: mousemove/mouseenter
 			video.addEventListener('mousemove', (event) => socket.emit('mousemove', event.movementX , event.movementY));
+			video.addEventListener('mouseenter', (event) => socket.emit('mouseenter', event.offsetX, event.offsetY));
 			// マウス: mousedown
 			window.addEventListener('mousedown', (event) => socket.emit('mousedown', event.type, event.button));
 			// マウス: mouseup

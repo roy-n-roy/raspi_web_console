@@ -62,14 +62,12 @@ const keybd_data = new Uint8Array(8);
  * 8-9byte: 水平ホイール移動量(signed byte) */
 const mouse_data = new Uint16Array(5);
 
-const digitizer_data = new Uint16Array(2);
-
 /** 最後に入力したキー 記憶用変数 */
 let lastKey = '';
 
 /** キーボード入力イベント */
-const keybdEvent = (eventType, code) => {
-	if(eventType === 'keydown'){
+const keybdEvent = async (eventType, code) => {
+	if (eventType === 'keydown'){
 		// 連続した同じ入力の場合はキー押下の状態から変化しないため、終了する。
 		if (lastKey === code) return;
 		// 最後に押下したキーを記憶
@@ -107,7 +105,7 @@ const keybdEvent = (eventType, code) => {
 
 	// 修飾キーの場合
 	if (isModifierKey){
-		if(eventType === 'keydown'){
+		if (eventType === 'keydown'){
 			keybd_data[0] |= keyMask;
 		}else{
 			keybd_data[0] &= ~keyMask;
@@ -116,7 +114,7 @@ const keybdEvent = (eventType, code) => {
 	}else{
 		let keyCode = hid.keymap[code];
 		let idx = keybd_data.indexOf(keyCode, 2);
-		if(eventType === 'keydown' && idx < 0){
+		if (eventType === 'keydown' && idx < 0){
 			// 最大入力キー数=6 より少ない場合
 			if ((idx = keybd_data.indexOf(0x00, 2)) >= 0){
 				keybd_data[idx] = keyCode;
@@ -126,7 +124,7 @@ const keybdEvent = (eventType, code) => {
 				keybd_data.copyWithin(2, 3);
 				keybd_data[keybd_data.length - 1] = keyCode;
 			}
-		}else if(eventType === 'keyup' && idx >= 0){
+		}else if (eventType === 'keyup' && idx >= 0){
 			keybd_data.copyWithin(idx, idx + 1);
 			keybd_data[keybd_data.length - 1] = 0x00;
 		}
@@ -139,8 +137,8 @@ const keybdEvent = (eventType, code) => {
 };
 
 /** マウスクリックイベント */
-const clickEvent = (eventType, button) => {
-	const buttonMask = ((_button) => {
+const clickEvent = async (eventType, button) => {
+	const buttonMask =  ((_button) => {
 		switch (_button){
 			case 0:
 				return hid.btn_mask.leftButton;
@@ -168,20 +166,8 @@ const clickEvent = (eventType, button) => {
 	});
 };
 
-/** マウス座標指定イベント */
-const pointEvent = (X, Y) => {
-	digitizer_data[0] = X;
-	digitizer_data[1] = Y;
-	fs.writeFile(conf.dev_digitizer, digitizer_data, (err) => {
-		if (err){
-			console.error(`Error point: ${digitizer_data}\n ${err}`);
-		}
-	});
-	moveEvent(1, 0);
-}
-
 /** マウス移動イベント */
-const moveEvent = (X, Y) => {
+const moveEvent = async (X, Y) => {
 	mouse_data[1] = X;
 	mouse_data[2] = Y;
 	mouse_data[3] = mouse_data[4] = 0x0000;
@@ -191,11 +177,24 @@ const moveEvent = (X, Y) => {
 		}
 	});
 };
+/** マウス座標指定移動イベント */
+const pointEvent = async (X, Y) => {
+	mouse_data[1] = mouse_data[2] = 0x7FFF;
+	mouse_data[3] = mouse_data[4] = 0x0000;
+	fs.writeFileSync(conf.dev_mouse, mouse_data);
+	mouse_data[1] = X;
+	mouse_data[2] = Y;
+	console.log(`DEBUG enter: ${X} ${Y} ${mouse_data}`);
+	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
+		if (err){
+			console.error(`Error move: ${mouse_data}\n ${err}`);
+		}
+	});
+}
 
 /** ホイールイベント */
-const wheelEvent = (X, Y) => {
-	mouse_data[1] = 0x0000;
-	mouse_data[2] = 0x0000;
+const wheelEvent = async (X, Y) => {
+	mouse_data[1] = mouse_data[2] = 0x0000;
 	mouse_data[3] = -Y;
 	mouse_data[4] = X;
 	fs.writeFile(conf.dev_mouse, mouse_data, (err) => {
