@@ -51,14 +51,15 @@
 		const socket = io({transports: ['websocket']});
 		socket.on('reconnect_attempt', () => socket.io.opts.transports = ['polling', 'websocket']);
 		// ソケット切断時
-		socket.on("disconnect", () => {
+		socket.on("disconnect", async () => {
+			await conn.disconnect();
 			if (window.confirm("切断されました。再接続しますか?")){
-				socket = socket.connect();
+				location.reload();
 			};
 		});
 
 		window.onload = () => {
-			startConn();
+			startConn().catch((_err) => setTimeout(startConn, 1000));
 
 			// キーボード・マウス入力イベント
 			// キーボード: keydown
