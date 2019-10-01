@@ -1,5 +1,5 @@
 [Unit]
-Description=Raspi Web Console Server
+Description=Web Console Server
 After=network.target usb_hid.service
 
 [Service]
