@@ -80,7 +80,7 @@ point_data[0] = conf.digitizer_id;
 let lastKey = '';
 
 /** キーボード入力イベント */
-const keybdEvent = async (eventType, code) => {
+const keybdEvent = async (eventType, code, ctrl, shift, alt, os) => {
 	if (eventType === 'keydown'){
 		// 連続した同じ入力の場合はキー押下の状態から変化しないため、終了する。
 		if (lastKey === code) return;
@@ -142,6 +142,12 @@ const keybdEvent = async (eventType, code) => {
 			keybd_data.copyWithin(idx, idx + 1);
 			keybd_data[keybd_data.length - 1] = 0x00;
 		}
+
+		// 修飾キーのkeyupをロストした場合の対策(押下したままになるのを防ぐ)
+		keybd_data[0] &= ~(ctrl ? 0 : (hid.key_mask.leftControl | hid.key_mask.rightControl) |
+							shift ? 0 : (hid.key_mask.leftShift | hid.key_mask.rightShift) |
+							alt ? 0 : (hid.key_mask.leftAlt | hid.key_mask.rightAlt) |
+							os ? 0 : (hid.key_mask.leftGUI | hid.key_mask.rightGUI));
 	}
 	fs.writeFile(conf.dev_keyboard, keybd_data, (err) => {
 		if (err){

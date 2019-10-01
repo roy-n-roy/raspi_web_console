@@ -64,12 +64,12 @@
 			// キーボード: keydown
 			window.addEventListener('keydown', (event) => {
 				event.preventDefault();
-				socket.emit('keydown', event.type, event.code);
+				socket.emit('keydown', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
 			});
 			// キーボード: keyup
 			window.addEventListener('keyup', (event) => {
 				event.preventDefault();
-				socket.emit('keyup', event.type, event.code)
+				socket.emit('keyup', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
 			}, true);
 			// マウス: mousemove/mouseenter
 			video.addEventListener('mousemove', (event) => socket.emit('mousemove', event.movementX , event.movementY));
