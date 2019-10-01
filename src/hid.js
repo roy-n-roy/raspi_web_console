@@ -1,14 +1,14 @@
 module.exports = {
 	/** mouse bottun bit mask */
-	btn_mask : { 
-		leftButton		:	0x0001,
-		rightButton		:	0x0002,
-		middleButton	:	0x0004,
-		backButton		:	0x0008,
-		forwardButton	:	0x0010
+	btn_mask: { 
+		leftButton		:	0x01,
+		rightButton		:	0x02,
+		middleButton	:	0x04,
+		backButton		:	0x08,
+		forwardButton	:	0x10
 	},
 	/** keyboard modifier keys bit mask */
-	key_mask : {
+	key_mask: {
 		leftControl	:	0x01,
 		leftShift	:	0x02,
 		leftAlt		:	0x04,
@@ -195,5 +195,6 @@ module.exports = {
 		"AltRight"		:	0xE6,	// Keyboard RightAlt
 		"OSRight"		:	0xE7,	// Keyboard Right GUI
 		"MetaRight"		:	0xE7	// Keyboard Right GUI
+		// 					0xE8-FFFF // Reserved
 	}
 }
