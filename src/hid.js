@@ -164,11 +164,11 @@ module.exports = {
 		//					0x8D,	// Keyboard International7
 		//					0x8E,	// Keyboard International8
 		//					0x8F,	// Keyboard International9
-		"Lang1"			:	0x90,	// Keyboard LANG1
-		"Lang2"			:	0x91,	// Keyboard LANG2
-		//					0x92,	// Keyboard LANG3
-		//					0x93,	// Keyboard LANG4
-		//					0x94,	// Keyboard LANG5
+		"Lang1"			:	0x90,	// Keyboard LANG1(Hangul/English)
+		"Lang2"			:	0x91,	// Keyboard LANG2(Hanja)
+		//					0x92,	// Keyboard LANG3(Katakana)
+		//					0x93,	// Keyboard LANG4(Hiragana)
+		//					0x94,	// Keyboard LANG5(Zenkaku/Hankaku)
 		//					0x95,	// Keyboard LANG6
 		//					0x96,	// Keyboard LANG7
 		//					0x97,	// Keyboard LANG8

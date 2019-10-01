@@ -214,7 +214,6 @@ const wheelEvent = async (X, Y) => {
 const pointEvent = async (X, Y) => {
 	point_data[1] = X;
 	point_data[2] = Y;
-	console.log(`Debug point: ${point_data}`);
 	fs.writeFile(conf.dev_mouse, point_data, (err) => {
 		if (err){
 			console.error(`Error point: ${point_data}\n ${err}`);
