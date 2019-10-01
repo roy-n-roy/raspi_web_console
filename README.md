@@ -14,3 +14,9 @@ displays HDMI input from CSI -2 through a browser, and enables mouse and keyboar
 
 ## How to use
 * Access to `http://raspberrypi.local/` on your browser.
+
+## ToDo
+* ブラウザのWindowSize変更に対応して、マウスポインタの移動量を調整する
+* mouseenterイベントに対応して、マウスポインタをブラウザ上と同位置に移動させる
+* OS Key(Windowsキー)の入力時の挙動の修正
+* 簡易的な認証機能を実装する
