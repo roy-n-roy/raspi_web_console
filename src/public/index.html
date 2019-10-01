@@ -65,12 +65,17 @@
 			window.addEventListener('keydown', (event) => {
 				event.preventDefault();
 				socket.emit('keydown', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
-			});
+				if (['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
+					socket.emit('keyup', 'keyup', event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
+				}
+			}, false);
 			// キーボード: keyup
 			window.addEventListener('keyup', (event) => {
 				event.preventDefault();
-				socket.emit('keyup', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
-			}, true);
+				if (!['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
+					socket.emit('keyup', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
+				}
+			}, false);
 			// マウス: mousemove/mouseenter
 			video.addEventListener('mousemove', (event) => socket.emit('mousemove', event.movementX , event.movementY));
 			video.addEventListener('mouseenter', (event) => socket.emit('mouseenter', event.offsetX, event.offsetY));
@@ -79,7 +84,7 @@
 			// マウス: mouseup
 			window.addEventListener('mouseup', (event) => socket.emit('mouseup', event.type, event.button));
 			// マウス: contextmenu
-			window.addEventListener("contextmenu", (event) => event.preventDefault(), true);
+			window.addEventListener("contextmenu", (event) => event.preventDefault(), false);
 			// マウス: browserback
 			history.pushState(null, null, null);
 			window.addEventListener("popstate", (event) => history.pushState(null, null, null));
@@ -87,7 +92,7 @@
 			window.addEventListener('wheel', (event) => {
 				event.preventDefault();
 				socket.emit('wheel', event.deltaX, event.deltaY);
-			}, true);
+			}, false);
 
 			// タッチデバイスイベント
 			// タッチ: touchstart
@@ -95,9 +100,9 @@
 				event.preventDefault();
 				lastX = event.changedTouches[0].clientX,
 				lastY = event.changedTouches[0].clientY;
-			}, true);
+			}, false);
 			// タッチ: touchend
-			window.addEventListener("touchend", (event) => event.preventDefault(), true);
+			window.addEventListener("touchend", (event) => event.preventDefault(), false);
 
 			// タッチ: touchmove
 			window.addEventListener("touchmove", (event) => {
@@ -110,7 +115,7 @@
 					socket.emit('wheel', Math.sign(X - lastX), Math.sign(Y - lastY));
 				}
 				lastX = X, lastY = Y;
-			}, true);
+			}, false);
 
 			// 動画表示サイズの設定
 			const remote = document.querySelector('#remote_video');
