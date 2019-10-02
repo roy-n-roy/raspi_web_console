@@ -7,6 +7,10 @@ module.exports = {
 		backButton		:	0x08,
 		forwardButton	:	0x10
 	},
+	/** digitizer In-Range bit mask */
+	dig_mask: {
+		inRange		:	0x10
+	},
 	/** keyboard modifier keys bit mask */
 	key_mask: {
 		leftControl	:	0x01,

@@ -74,7 +74,7 @@ mouse_data[0] = conf.mouse_id;
  * 4-5bytes: 垂直方向位置(signed short)
  * 6-9bytes: 0 */
 const point_data = new Uint16Array(5);
-point_data[0] = conf.digitizer_id;
+point_data[0] = conf.digitizer_id | (hid.dig_mask.inRange << 8);
 
 /** 最後に入力したキー 記憶用変数 */
 let lastKey = '';
