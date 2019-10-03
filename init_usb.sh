@@ -133,7 +133,7 @@ mkdir -p configs/c.1/strings/0x409
 echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
 echo 1000 > configs/c.1/MaxPower
 
-if [ -f UDC ]; then echo > UDC; fi
+if [ -n ""$(cat UDC)"" ]; then echo > UDC; fi
 
 ## Ethernet Adapter for Debug.
 #N="usb0"
@@ -167,3 +167,4 @@ echo $MOUSE_REPT | xxd -r -ps > functions/hid.$N/report_desc
 ln -s functions/hid.$N configs/c.1/
 
 ls /sys/class/udc > UDC
+
