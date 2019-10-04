@@ -24,8 +24,10 @@
 	<div class="video"><video id="remote_video" autoplay muted></video></div>
 	<script src="/js/ayame.min.js"></script>
 	<script src="/js/socket.io.slim.js"></script>
+	<script src="/hid.js"></script>
 	<script>
 		let lastX = 0, lastY = 0;
+		const useDataChannel = true;
 
 		const signalingUrl = 'ws://' + location.hostname + '/signaling';
 		const roomId = 'web_console';
@@ -48,90 +50,171 @@
 			});
 		};
 
-		const socket = io({transports: ['websocket']});
-		socket.on('reconnect_attempt', () => socket.io.opts.transports = ['polling', 'websocket']);
-		// ソケット切断時
-		socket.on("disconnect", async () => {
-			await conn.disconnect();
-			if (window.confirm("切断されました。再接続しますか?")){
-				location.reload();
+		if (useDataChannel){
+			window.onload = () => {
+				startConn().catch((_err) => setTimeout(startConn, 1000));
+
+				// キーボード・マウス入力イベント
+				// キーボード: keydown
+				window.addEventListener('keydown', (event) => {
+					event.preventDefault();
+					conn.sendData(new Uint8Array([0x01, Hid.keymap[event.code]]));
+					if (['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
+						conn.sendData(new Uint8Array([0x02, Hid.keymap[event.code]]));
+					}
+				}, false);
+				// キーボード: keyup
+				window.addEventListener('keyup', (event) => {
+					event.preventDefault();
+					if (!['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
+						conn.sendData(new Uint8Array([0x02, Hid.keymap[event.code]]));
+					}
+				}, false);
+				// マウス: mousemove/mouseenter
+				video.addEventListener('mousemove', (event) => {
+					let data = new Uint8Array(5);
+					let view = new DataView(data.buffer);
+					data[0] = 0x04;
+					view.setUint16(1, event.movementX, true);
+					view.setUint16(3, event.movementY, true);
+					conn.sendData(data);
+				});
+				video.addEventListener('mouseenter', (event) => {
+					let data = new Uint8Array(5);
+					let view = new DataView(data.buffer);
+					data[0] = 0x06;
+					view.setUint16(1, event.offsetX, true);
+					view.setUint16(3, event.offsetY, true);
+					conn.sendData(data);
+				});
+				// マウス: mousedown
+				window.addEventListener('mousedown', (event) => {
+					console.log(new Uint8Array([0x03, event.button]));
+					conn.sendData(new Uint8Array([0x03, event.button]));
+				});
+				// マウス: mouseup
+				window.addEventListener('mouseup', (event) => {
+					console.log(new Uint8Array([0x03, 0x10 | event.button]));
+					conn.sendData(new Uint8Array([0x03, 0x10 | event.button]));
+				});
+				// マウス: contextmenu
+				window.addEventListener("contextmenu", (event) => event.preventDefault(), false);
+				// マウス: browserback
+				history.pushState(null, null, null);
+				window.addEventListener("popstate", (event) => history.pushState(null, null, null));
+				// ホイール: wheel
+				window.addEventListener('wheel', (event) => {
+					event.preventDefault();
+				}, false);
+
+				// タッチデバイスイベント
+				// タッチ: touchstart
+				window.addEventListener("touchstart", (event) => {
+					event.preventDefault();
+					lastX = event.changedTouches[0].clientX,
+					lastY = event.changedTouches[0].clientY;
+				}, false);
+				// タッチ: touchend
+				window.addEventListener("touchend", (event) => event.preventDefault(), false);
+
+				// タッチ: touchmove
+				window.addEventListener("touchmove", (event) => {
+					event.preventDefault();
+					const X = event.changedTouches[0].clientX,
+						Y = event.changedTouches[0].clientY;
+					if (event.touches.length == 1){
+					}else{
+					}
+					lastX = X, lastY = Y;
+				}, false);
+
 			};
-		});
-
-		window.onload = () => {
-			startConn().catch((_err) => setTimeout(startConn, 1000));
-
-			// キーボード・マウス入力イベント
-			// キーボード: keydown
-			window.addEventListener('keydown', (event) => {
-				event.preventDefault();
-				socket.emit('keydown', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
-				if (['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
-					socket.emit('keyup', 'keyup', event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
-				}
-			}, false);
-			// キーボード: keyup
-			window.addEventListener('keyup', (event) => {
-				event.preventDefault();
-				if (!['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
-					socket.emit('keyup', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
-				}
-			}, false);
-			// マウス: mousemove/mouseenter
-			video.addEventListener('mousemove', (event) => socket.emit('mousemove', event.movementX , event.movementY));
-			video.addEventListener('mouseenter', (event) => socket.emit('mouseenter', event.offsetX, event.offsetY));
-			// マウス: mousedown
-			window.addEventListener('mousedown', (event) => socket.emit('mousedown', event.type, event.button));
-			// マウス: mouseup
-			window.addEventListener('mouseup', (event) => socket.emit('mouseup', event.type, event.button));
-			// マウス: contextmenu
-			window.addEventListener("contextmenu", (event) => event.preventDefault(), false);
-			// マウス: browserback
-			history.pushState(null, null, null);
-			window.addEventListener("popstate", (event) => history.pushState(null, null, null));
-			// ホイール: wheel
-			window.addEventListener('wheel', (event) => {
-				event.preventDefault();
-				socket.emit('wheel', event.deltaX, event.deltaY);
-			}, false);
-
-			// タッチデバイスイベント
-			// タッチ: touchstart
-			window.addEventListener("touchstart", (event) => {
-				event.preventDefault();
-				lastX = event.changedTouches[0].clientX,
-				lastY = event.changedTouches[0].clientY;
-			}, false);
-			// タッチ: touchend
-			window.addEventListener("touchend", (event) => event.preventDefault(), false);
-
-			// タッチ: touchmove
-			window.addEventListener("touchmove", (event) => {
-				event.preventDefault();
-				const X = event.changedTouches[0].clientX,
-					  Y = event.changedTouches[0].clientY;
-				if (event.touches.length == 1){
-					socket.emit('touchmove', X - lastX, Y - lastY);
-				}else{
-					socket.emit('wheel', Math.sign(X - lastX), Math.sign(Y - lastY));
-				}
-				lastX = X, lastY = Y;
-			}, false);
-
-			// 動画表示サイズの設定
-			const remote = document.querySelector('#remote_video');
-			if (remote.videoHeight * window.innerWidth > remote.videoWidth * window.innerHeight ) {
-				remote.videoHeight = window.innerHeight;
-			}
-			// 画面サイズ変更イベント
-			window.addEventListener('resize', (event) => {
-				socket.emit('windowresize', window.innerHeight, window.innerWidth);
-				if (remote.videoHeight * window.innerWidth > remote.videoWidth * window.innerHeight) {
-					console.log(`resize! ${remote.videoWidth} => ${remote.videoWidth * window.innerHeight / remote.videoHeight}`);
-					remote.videoWidth = remote.videoWidth * window.innerHeight / remote.videoHeight;
-				}
+		}else{
+			const socket = io({transports: ['websocket']});
+			socket.on('reconnect_attempt', () => socket.io.opts.transports = ['polling', 'websocket']);
+			// ソケット切断時
+			socket.on("disconnect", async () => {
+				await conn.disconnect();
+				if (window.confirm("切断されました。再接続しますか?")){
+					location.reload();
+				};
 			});
-		};
+
+			window.onload = () => {
+				startConn().catch((_err) => setTimeout(startConn, 1000));
+
+				// キーボード・マウス入力イベント
+				// キーボード: keydown
+				window.addEventListener('keydown', (event) => {
+					event.preventDefault();
+					socket.emit('keydown', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
+					if (['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
+						socket.emit('keyup', 'keyup', event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
+					}
+				}, false);
+				// キーボード: keyup
+				window.addEventListener('keyup', (event) => {
+					event.preventDefault();
+					if (!['Backquote', 'KanaMode', 'CapsLock'].includes(event.code)){
+						socket.emit('keyup', event.type, event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
+					}
+				}, false);
+				// マウス: mousemove/mouseenter
+				video.addEventListener('mousemove', (event) => socket.emit('mousemove', event.movementX , event.movementY));
+				video.addEventListener('mouseenter', (event) => socket.emit('mouseenter', event.offsetX, event.offsetY));
+				// マウス: mousedown
+				window.addEventListener('mousedown', (event) => socket.emit('mousedown', event.type, event.button));
+				// マウス: mouseup
+				window.addEventListener('mouseup', (event) => socket.emit('mouseup', event.type, event.button));
+				// マウス: contextmenu
+				window.addEventListener("contextmenu", (event) => event.preventDefault(), false);
+				// マウス: browserback
+				history.pushState(null, null, null);
+				window.addEventListener("popstate", (event) => history.pushState(null, null, null));
+				// ホイール: wheel
+				window.addEventListener('wheel', (event) => {
+					event.preventDefault();
+					socket.emit('wheel', event.deltaX, event.deltaY);
+				}, false);
+
+				// タッチデバイスイベント
+				// タッチ: touchstart
+				window.addEventListener("touchstart", (event) => {
+					event.preventDefault();
+					lastX = event.changedTouches[0].clientX,
+					lastY = event.changedTouches[0].clientY;
+				}, false);
+				// タッチ: touchend
+				window.addEventListener("touchend", (event) => event.preventDefault(), false);
+
+				// タッチ: touchmove
+				window.addEventListener("touchmove", (event) => {
+					event.preventDefault();
+					const X = event.changedTouches[0].clientX,
+						Y = event.changedTouches[0].clientY;
+					if (event.touches.length == 1){
+						socket.emit('touchmove', X - lastX, Y - lastY);
+					}else{
+						socket.emit('wheel', Math.sign(X - lastX), Math.sign(Y - lastY));
+					}
+					lastX = X, lastY = Y;
+				}, false);
+
+				// 動画表示サイズの設定
+				const remote = document.querySelector('#remote_video');
+				if (remote.videoHeight * window.innerWidth > remote.videoWidth * window.innerHeight ) {
+					remote.videoHeight = window.innerHeight;
+				}
+				// 画面サイズ変更イベント
+				window.addEventListener('resize', (event) => {
+					socket.emit('windowresize', window.innerHeight, window.innerWidth);
+					if (remote.videoHeight * window.innerWidth > remote.videoWidth * window.innerHeight) {
+						console.log(`resize! ${remote.videoWidth} => ${remote.videoWidth * window.innerHeight / remote.videoHeight}`);
+						remote.videoWidth = remote.videoWidth * window.innerHeight / remote.videoHeight;
+					}
+				});
+			};
+		}
 	</script>
 </body>
 </html>
