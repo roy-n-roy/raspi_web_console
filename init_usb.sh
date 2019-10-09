@@ -1,5 +1,36 @@
 #!/bin/bash -e
+mkdir -p /sys/kernel/config/usb_gadget/gadget
+cd /sys/kernel/config/usb_gadget/gadget
 
+### Device Descriptorの設定
+# VendorID
+echo 0x1d6b > idVendor # Linux Foundation
+# USB HID Specification Release
+echo 0x0200 > bcdUSB # USB2
+# USB Class code
+echo 0xEF > bDeviceClass # Miscellaneous Device Class
+# USB SubClass code
+echo 0x02 > bDeviceSubClass # Common
+# USB Protocol code
+echo 0x01 > bDeviceProtocol # Interface Association Descriptor
+
+# ProductID (assigned by manufacturer)
+echo 0x0001 > idProduct
+# Device release number(assigned by manufacturer)
+echo 0x0100 > bcdDevice # v1.0.0
+
+# language code: 0x409=ENGLISH_US
+mkdir -p strings/0x409
+echo "fedcba9876543210" > strings/0x409/serialnumber # 適当に設定
+echo "Raspberry Pi" > strings/0x409/manufacturer
+echo "Generic USB Composite Device" > strings/0x409/product
+
+### Configuration Descriptorの設定
+mkdir -p configs/c.1/strings/0x409
+echo 1500 > configs/c.1/MaxPower # 1500*2mA= 3.0A
+echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
+
+### Report Descriptor定義
 # Keyboard Report Descriptor
 # (Modifier keys + 6 simultaneous Keys -> 8 Bytes)
 KEYBD_REPT=""
@@ -41,6 +72,7 @@ KEYBD_REPT+="C0"        # END_COLLECTION
 #  (report_id=1, 5 Buttons, X, Y, Wheel, AC Pan -> 1byte + 1byte + 4*2 Bytes)
 #  (report_id=2, 5 Buttons, X, Y, padding*2     -> 1byte + 1byte + 4*2 Bytes)
 MOUSE_REPT=""
+# マウス部分
 MOUSE_REPT+="0501"      # USAGE_PAGE (Generic Desktop)
 MOUSE_REPT+="0902"      # USAGE (Mouse)
 MOUSE_REPT+="A101"      # COLLECTION (Application)
@@ -76,6 +108,7 @@ MOUSE_REPT+="9501"      #     REPORT_COUNT (1)
 MOUSE_REPT+="8106"      #     INPUT (Data,Var,Rel)
 MOUSE_REPT+="C0"        #   END_COLLECTION
 MOUSE_REPT+="C0"        # END_COLLECTION
+# デジタイザ部分
 MOUSE_REPT+="050D"      # USAGE_PAGE (Digitizers)
 MOUSE_REPT+="0902"      # USAGE (Pen)
 MOUSE_REPT+="A101"      # COLLECTION (Application)
@@ -115,56 +148,27 @@ MOUSE_REPT+="8101"      #     INPUT (Cnst,Ary,Abs)
 MOUSE_REPT+="C0"        #   END_COLLECTION
 MOUSE_REPT+="C0"        # END_COLLECTION
 
-mkdir -p /sys/kernel/config/usb_gadget/gadget
-cd /sys/kernel/config/usb_gadget/gadget
-
-echo 0x1d6b > idVendor # Linux Foundation
-echo 0x0104 > idProduct # Multifunction Composite Gadget
-echo 0x0100 > bcdDevice # v1.0.0
-echo 0x0200 > bcdUSB # USB2
-echo 0xEF > bDeviceClass
-echo 0x02 > bDeviceSubClass
-echo 0x01 > bDeviceProtocol
-mkdir -p strings/0x409
-echo "fedcba9876543210" > strings/0x409/serialnumber
-echo "Raspberry Pi" > strings/0x409/manufacturer
-echo "Generic USB Composite Device" > strings/0x409/product
-mkdir -p configs/c.1/strings/0x409
-echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
-echo 1000 > configs/c.1/MaxPower
-
 if [ -n ""$(cat UDC)"" ]; then echo > UDC; fi
 
-## Ethernet Adapter for Debug.
-#N="usb0"
-#mkdir -p functions/rndis.$N/os_desc/interface.rndis
-## first byte of address must be even
-#HOST="48:6f:73:74:50:43" # "HostPC"
-#SELF="42:61:64:55:53:42" # "BadUSB"
-#echo RNDIS > functions/rndis.$N/os_desc/interface.rndis/compatible_id
-#echo 5162001 > functions/rndis.$N/os_desc/interface.rndis/sub_compatible_id
-#echo $HOST > functions/rndis.$N/host_addr
-#echo $SELF > functions/rndis.$N/dev_addr
-#ln -s functions/rndis.$N configs/c.1/
-
-# Keyboard (Modifier keys + 6 simultaneous Keys -> 8 Bytes)
+### Report Descriptorの設定
+# Keyboard
 N="usb0"
 if [ -L configs/c.1/hid.$N ]; then rm configs/c.1/hid.$N; fi
 mkdir -p functions/hid.$N
-echo 1 > functions/hid.$N/protocol
-echo 1 > functions/hid.$N/subclass
-echo 8 > functions/hid.$N/report_length
+echo 1 > functions/hid.$N/subclass # Boot Device
+echo 1 > functions/hid.$N/protocol # Keyboard
+echo 8 > functions/hid.$N/report_length # Report length: 8bytes
 echo $KEYBD_REPT | xxd -r -ps > functions/hid.$N/report_desc
 ln -s functions/hid.$N configs/c.1/
 
+# Mouse
 N="usb1"
 if [ -L configs/c.1/hid.$N ]; then rm configs/c.1/hid.$N; fi
 mkdir -p functions/hid.$N
-echo 2 > functions/hid.$N/protocol
-echo 1 > functions/hid.$N/subclass
-echo 10 > functions/hid.$N/report_length
+echo 0 > functions/hid.$N/subclass # No Subclass
+echo 0 > functions/hid.$N/protocol # None
+echo 10 > functions/hid.$N/report_length  # Report length: 10bytes
 echo $MOUSE_REPT | xxd -r -ps > functions/hid.$N/report_desc
 ln -s functions/hid.$N configs/c.1/
 
 ls /sys/class/udc > UDC
-
