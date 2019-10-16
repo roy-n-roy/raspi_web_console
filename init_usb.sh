@@ -20,15 +20,16 @@ echo 0x0001 > idProduct
 echo 0x0100 > bcdDevice # v1.0.0
 
 # language code: 0x409=ENGLISH_US
-mkdir -p strings/0x409
-echo "fedcba9876543210" > strings/0x409/serialnumber # 適当に設定
-echo "Raspberry Pi" > strings/0x409/manufacturer
-echo "Generic USB Composite Device" > strings/0x409/product
+LANG="0x409"
+mkdir -p strings/$LANG
+echo "fedcba9876543210" > strings/$LANG/serialnumber # 適当に設定
+echo "Raspberry Pi" > strings/$LANG/manufacturer
+echo "Generic USB Composite Device" > strings/$LANG/product
 
 ### Configuration Descriptorの設定
-mkdir -p configs/c.1/strings/0x409
+mkdir -p configs/c.1/strings/$LANG
 echo 1500 > configs/c.1/MaxPower # 1500*2mA= 3.0A
-echo "Config 1: ECM network" > configs/c.1/strings/0x409/configuration
+echo "Config 1: ECM network" > configs/c.1/strings/$LANG/configuration
 
 ### Report Descriptor定義
 # Keyboard Report Descriptor
